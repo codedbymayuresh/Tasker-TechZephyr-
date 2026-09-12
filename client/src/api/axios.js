@@ -3,7 +3,7 @@ import axios from 'axios';
 // Single shared axios instance for the whole app.
 // Hardcoded Render URL to bypass Vercel environment variable issues completely.
 const api = axios.create({
-  baseURL: 'https://tasker-tech-zephyr.onrender.com/api',
+  baseURL: 'https://tasker-tech-zephyr.onrender.com',
 });
 
 // Attaches the JWT (if we have one saved) to every outgoing request,
