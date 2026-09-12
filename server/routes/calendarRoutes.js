@@ -3,28 +3,33 @@ const router = express.Router();
 const { google } = require('googleapis');
 const User = require('../models/User');
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
+// Helper function to create a fresh OAuth2 client per request
+const createOAuthClient = () => {
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+};
 
-// 1. Generate Auth URL (passing userId in state)
+// 1. Generate Auth URL
 router.get('/auth', (req, res) => {
   const userId = req.query.userId;
+  const oauth2Client = createOAuthClient();
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
     scope: ['https://www.googleapis.com/auth/calendar.readonly'],
-    state: userId // User ID ko Google ke pass bhej rahe hain taaki callback me mil jaye
+    state: userId
   });
   res.json({ url });
 });
 
-// 2. OAuth Callback & Save Tokens to User Schema
+// 2. OAuth Callback
 router.get('/callback', async (req, res) => {
   const { code, state: userId } = req.query;
   try {
+    const oauth2Client = createOAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
     
     if (userId) {
@@ -38,7 +43,7 @@ router.get('/callback', async (req, res) => {
   }
 });
 
-// 3. Fetch Events using User's Saved Tokens
+// 3. Fetch Events
 router.get('/sync/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -46,6 +51,7 @@ router.get('/sync/:userId', async (req, res) => {
       return res.status(400).json({ error: 'Google Calendar not connected' });
     }
 
+    const oauth2Client = createOAuthClient();
     oauth2Client.setCredentials(user.googleTokens);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     
