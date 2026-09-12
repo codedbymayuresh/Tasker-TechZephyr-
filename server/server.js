@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const userRoutes = require('./routes/userRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
 
 connectDB();
 
@@ -25,9 +26,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

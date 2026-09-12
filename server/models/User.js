@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
     inventory: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
     ],
+
+    googleTokens: {
+      access_token: String,
+      refresh_token: String,
+      expiry_date: Number,
+    },
   },
   { timestamps: true }
 );
