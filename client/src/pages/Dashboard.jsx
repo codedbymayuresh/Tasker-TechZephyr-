@@ -35,6 +35,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleGoogleSync = async () => {
+    try {
+      const response = await api.get(`/calendar/auth?userId=${user._id}`);
+      window.location.href = response.data.url;
+    } catch (err) {
+      console.error("Google sync error", err);
+      setError('Failed to connect Google Calendar');
+    }
+  };
+
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
@@ -108,21 +118,39 @@ export default function Dashboard() {
           <p style={{ color: '#888', margin: '0.3rem 0 0 0', fontSize: '0.85rem' }}>SYSTEM STATUS: ONLINE</p>
         </div>
         
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          style={{
-            background: 'rgba(0, 240, 255, 0.1)',
-            border: '1px solid #00f0ff',
-            color: '#00f0ff',
-            padding: '0.75rem 1.5rem',
-            fontFamily: 'inherit',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 0 10px rgba(0,240,255,0.2)',
-            letterSpacing: '1px'
-          }}>
-          + NEW QUEST
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <button 
+            onClick={handleGoogleSync}
+            style={{
+              background: 'rgba(168, 85, 247, 0.1)',
+              border: '1px solid #a855f7',
+              color: '#a855f7',
+              padding: '0.75rem 1.2rem',
+              fontFamily: 'inherit',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(168,85,247,0.2)',
+              letterSpacing: '1px'
+            }}>
+            🔗 SYNC CALENDAR
+          </button>
+
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              background: 'rgba(0, 240, 255, 0.1)',
+              border: '1px solid #00f0ff',
+              color: '#00f0ff',
+              padding: '0.75rem 1.5rem',
+              fontFamily: 'inherit',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(0,240,255,0.2)',
+              letterSpacing: '1px'
+            }}>
+            + NEW QUEST
+          </button>
+        </div>
       </div>
 
       {levelUpMessage && (

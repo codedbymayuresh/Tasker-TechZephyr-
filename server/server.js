@@ -9,12 +9,11 @@ const taskRoutes = require('./routes/taskRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const userRoutes = require('./routes/userRoutes');
 
-
 connectDB();
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 // Simple health check - useful for confirming deployment worked.
