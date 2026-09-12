@@ -1,119 +1,145 @@
-# Life RPG
+# Tasker-TechZephyr // Life RPG
 
-A gamified productivity web app: complete real tasks ("Quests"), earn XP and gold, level up, and grow character attributes. Built with the MERN stack.
-
-**Status:** Backend is fully built and tested. Frontend has all functional logic, routing, and API wiring in place with minimal/neutral CSS. Theming (colors, fonts, animations, renamed copy) is the next step — see "Next Steps" below.
+A cybernetic gamified productivity web application: execute real-world tasks ("Quests"), earn XP and credit balances, level up, sync operational timelines with Google Calendar, and upgrade system attributes. Built on the MERN stack.
 
 ---
 
-## Tech Stack
+## Tech Stack & Architecture
 
-- **MongoDB** + Mongoose — database
-- **Express** — REST API
-- **React (Vite)** — frontend
-- **JWT** — authentication
+* **MongoDB** + Mongoose — Decentralized database layer
+* **Express** — Neural REST API gateway
+* **React (Vite)** — Frontend cyber-deck interface
+* **JWT** — Secure session authorization tokens
+* **Googleapis** — Secure Google Calendar OAuth2 synchronization bridge
 
-## Project Structure
+---
 
-```
-life-rpg-app/
-├── server/                 # Express + MongoDB backend
-│   ├── config/db.js         # MongoDB connection
-│   ├── models/               # User, Task, Item schemas
-│   ├── controllers/          # Business logic (incl. RPG reward logic)
-│   ├── routes/                # API route definitions
-│   ├── middleware/           # JWT auth guard, error handler
-│   ├── utils/rpgEngine.js    # XP curve, leveling, streaks, rewards - all game math lives here
-│   ├── seed/seedItems.js     # Populates the shop with starter items
-│   └── server.js              # App entry point
+## Directory Structure
+
+```text
+Tasker-TechZephyr/
+
+├── server/                         # Express + MongoDB neural backend
+│   ├── config/db.js                # Database handshake connection
+│   ├── models/                     # User, Task schemas
+│   ├── routes/                     # API routing matrix (tasks, auth, calendar)
+│   ├── middleware/                 # JWT auth guard, error interceptors
+│   ├── utils/rpgEngine.js          # XP progression algorithms, streak logic
+│   └── server.js                   # Main server execution entry
 │
-└── client/                 # React (Vite) frontend
+└── client/                         # React (Vite) cyberpunk interface
     └── src/
-        ├── api/axios.js               # Configured API client (auto-attaches JWT)
-        ├── context/AuthContext.jsx    # Global auth state (user, login, signup, logout)
-        ├── components/                 # Navbar, XPBar, TaskForm, TaskList, etc.
-        └── pages/                       # Login, Signup, Dashboard, Shop
+        ├── api/axios.js            # Configured API bridge (auto-attaches JWT)
+        ├── context/AuthContext.jsx # Global user state management
+        ├── components/             # XPBar, StreakDisplay, interactive modules
+        └── pages/                  # Dashboard, Authentication terminals
 ```
 
-## Setup
+---
 
-### 1. Backend
+# System Initialization & Setup
+
+## 1. Backend Neural Core
 
 ```bash
 cd server
+
 npm install
+
 cp .env.example .env
 ```
 
-Edit `.env`:
-- `MONGO_URI` — your MongoDB connection string (local `mongodb://localhost:27017/life-rpg` or a MongoDB Atlas URI)
-- `JWT_SECRET` — any long random string
-- `PORT` — defaults to 5000
-- `CLIENT_URL` — defaults to `http://localhost:5173` (for CORS)
+Configure `.env` parameters:
 
-Then:
-```bash
-npm run seed   # populates the shop with a few starter items (optional but recommended)
-npm run dev    # starts the server with nodemon on http://localhost:5000
-```
+* `MONGO_URI` — MongoDB Atlas connection cluster
+* `JWT_SECRET` — Cryptographic signature key
+* `PORT` — Operational server port (default: `10000`)
+* `CLIENT_URL` — Frontend origin URL (for CORS binding)
+* `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` — OAuth credentials for Calendar integration
 
-### 2. Frontend
+Launch the backend:
 
 ```bash
-cd client
-npm install
-cp .env.example .env
+npm run dev
 ```
 
-Edit `.env` if needed (`VITE_API_URL`, defaults to `http://localhost:5000/api`).
-
-```bash
-npm run dev    # starts Vite dev server on http://localhost:5173
-```
-
-Open `http://localhost:5173` — sign up, add a task, complete it, and watch XP/level/streak update.
+Starts nodemon terminal instance.
 
 ---
 
-## What's Already Implemented
+## 2. Frontend Interface Deck
 
-- **Auth**: signup, login, JWT sessions, protected routes (both backend middleware and frontend route guards)
-- **Data isolation**: every task/user query is scoped to `req.user._id` — no user can see or modify another user's data
-- **Task CRUD**: create, read, update, delete, complete
-- **RPG engine** (`server/utils/rpgEngine.js`):
-  - Non-linear XP curve: `xpRequiredForLevel(level) = level² × 100`
-  - Category → attribute mapping (e.g., "coding" task → Intellect)
-  - Difficulty-based rewards (easy/medium/hard → different XP/gold/attribute gains)
-  - Streak tracking (increments on consecutive days, resets on a missed day)
-  - Level-up detection returned with every task completion
-- **Shop/economy**: item list, purchase endpoint with gold-balance and duplicate-ownership checks
-- **Frontend**: fully wired to the API — dashboard shows live XP bar, attributes, streak, and task list; optimistic UI on task completion/deletion (instant visual feedback, rolls back on error); shop page with affordability checks
-- **Accessibility groundwork**: semantic HTML (`main`, `nav`, `ul`/`li`), `aria-label`/`role` attributes on interactive elements and the XP progress bar, labeled form inputs
+```bash
+cd client
 
-## Next Steps (What's Left For You + Gemini)
+npm install
 
-This is intentionally left minimal so the theme pass doesn't fight against baked-in design decisions:
+cp .env.example .env
+```
 
-1. **Visual theme** — colors, typography, iconography matching your chosen theme (e.g., post-apocalypse)
-2. **Copy/renaming** — "Tasks" → "Quests", "Points" → "Scrap", etc. (search for user-facing strings in `client/src/pages` and `client/src/components`)
-3. **Animations** — XP bar fill transitions, level-up celebration effect, task-complete micro-interactions (the `.xp-bar-fill` and level-up banner in `Dashboard.jsx` are natural places to hook these in)
-4. **Loading skeletons** — currently plain "Loading..." text (`.loading-state` class) — swap for skeleton placeholders
-5. **Responsive polish** — base layout is responsive-ish (flexbox/grid) but hasn't been tuned/tested across breakpoints
-6. **Full accessibility pass** — color contrast, keyboard-nav testing, screen reader testing
+Configure `client/.env`:
 
-Every element already has a CSS class name (`task-card`, `xp-bar-fill`, `navbar`, `shop-item-card`, etc.) — point Gemini at `client/src/index.css` and these class names to restyle without needing to touch component logic.
+* `VITE_API_URL` — Backend endpoint URL (`https://tasker-techzephyr.onrender.com/api` or local)
 
-## API Reference (quick)
+Launch the Vite development server:
 
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/signup` | No | Create account |
-| POST | `/api/auth/login` | No | Log in |
-| GET | `/api/auth/me` | Yes | Get current user |
-| GET | `/api/tasks` | Yes | List your tasks |
-| POST | `/api/tasks` | Yes | Create a task |
-| PUT | `/api/tasks/:id` | Yes | Edit a task |
-| DELETE | `/api/tasks/:id` | Yes | Delete a task |
-| PATCH | `/api/tasks/:id/complete` | Yes | Complete a task (triggers XP/gold/level/streak logic) |
-| GET | `/api/shop` | Yes | List shop items |
-| POST | `/api/shop/purchase/:itemId` | Yes | Buy an item |
+```bash
+npm run dev
+```
+
+Boots up local interface on port `5173`.
+
+---
+
+# Core System Modules Implemented
+
+### Secure Neural Auth
+
+Signup, login, JWT session management, protected access guards across all client modules.
+
+### Data Isolation Protocol
+
+Strict user-level data compartmentalization scoped to `req.user._id`.
+
+### Quest Execution Engine (CRUD + RPG Math)
+
+* Non-linear leveling progression:
+
+  \(\text{xpRequiredForLevel}(level) = level^2 \times 100\)
+
+* Priority & difficulty multipliers for XP and attribute updates.
+
+* Streak tracking algorithm (consecutive daily execution monitoring).
+
+### Google Calendar Sync Matrix
+
+OAuth2 integration supporting per-user token storage in MongoDB and live event synchronization (`/api/calendar/...`).
+
+### Cyberpunk UI Interface
+
+Designed with custom neon aesthetics:
+
+* `#00f0ff` — cyan
+* `#a855f7` — purple
+* `#16161a` — terminal panels
+* Monospace typography
+
+---
+
+# API Command Matrix
+
+| Method   | Endpoint                     | Auth Required | Description                                        |
+| -------- | ---------------------------- | ------------- | -------------------------------------------------- |
+| `POST`   | `/api/auth/signup`           | No            | Initialize new user account                        |
+| `POST`   | `/api/auth/login`            | No            | Authenticate user session                          |
+| `GET`    | `/api/auth/me`               | Yes           | Retrieve active user telemetry                     |
+| `GET`    | `/api/tasks`                 | Yes           | Retrieve active quest queue                        |
+| `POST`   | `/api/tasks`                 | Yes           | Initialize new quest                               |
+| `PATCH`  | `/api/tasks/:id/complete`    | Yes           | Execute quest (triggers XP/streak updates)         |
+| `DELETE` | `/api/tasks/:id`             | Yes           | Terminate quest                                    |
+| `GET`    | `/api/calendar/auth`         | Yes           | Initiate Google Calendar OAuth handshake           |
+| `GET`    | `/api/calendar/callback`     | No            | Process OAuth authorization callback & save tokens |
+| `GET`    | `/api/calendar/sync/:userId` | Yes           | Fetch synchronized primary calendar events         |
+
+```
+```
