@@ -11,7 +11,7 @@ const createOAuthClient = () => {
   );
 };
 
-// 1. Generate Auth URL (passing userId in state)
+// 1. Generate Auth URL
 router.get('/auth', (req, res) => {
   const userId = req.query.userId;
   if (!userId) {
@@ -27,7 +27,7 @@ router.get('/auth', (req, res) => {
   res.json({ url });
 });
 
-// 2. OAuth Callback & Save Tokens to User Schema
+// 2. OAuth Callback & Save Tokens
 router.get('/callback', async (req, res) => {
   const { code, state: userId } = req.query;
   try {
@@ -36,18 +36,17 @@ router.get('/callback', async (req, res) => {
     
     if (userId && userId !== 'undefined') {
       await User.findByIdAndUpdate(userId, { googleTokens: tokens });
-    } else {
-      console.warn("Warning: Received OAuth callback without valid userId state.");
     }
 
-    res.redirect(`https://tasker-tech-zephyr.vercel.app/dashboard?calendar=connected`);
+    // FIXED: Redirecting to root URL instead of /dashboard to prevent Vercel 404
+    res.redirect(`https://tasker-tech-zephyr.vercel.app/?calendar=connected`);
   } catch (error) {
     console.error("Callback error:", error);
     res.status(500).json({ error: 'Authentication failed' });
   }
 });
 
-// 3. Fetch Events using User's Saved Tokens
+// 3. Fetch Events
 router.get('/sync/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
