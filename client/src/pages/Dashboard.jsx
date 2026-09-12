@@ -11,6 +11,11 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [levelUpMessage, setLevelUpMessage] = useState('');
   
+  // Google Calendar state
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  
   // Modal state & form inputs
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -21,7 +26,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchTasks();
+
+    // Check for Google Calendar connection return param
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('calendar') === 'connected') {
+      setIsCalendarConnected(true);
+      setLevelUpMessage('Google Calendar connected successfully!');
+      setTimeout(() => setLevelUpMessage(''), 4000);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchSyncedEvents();
+    }
+  }, [user]);
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -32,6 +52,21 @@ export default function Dashboard() {
       setError('Could not load tasks. Check your connection and try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSyncedEvents = async () => {
+    try {
+      setSyncLoading(true);
+      const res = await api.get(`/calendar/sync/${user._id}`);
+      if (res.data.events) {
+        setCalendarEvents(res.data.events);
+        setIsCalendarConnected(true);
+      }
+    } catch (err) {
+      console.log('Calendar not connected or sync error.');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -132,7 +167,7 @@ export default function Dashboard() {
               boxShadow: '0 0 10px rgba(168,85,247,0.2)',
               letterSpacing: '1px'
             }}>
-            🔗 SYNC CALENDAR
+            {isCalendarConnected ? '🔗 CALENDAR SYNCED' : '🔗 SYNC CALENDAR'}
           </button>
 
           <button 
@@ -213,27 +248,66 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* Right Column: Completed Archive */}
-        <section style={{ background: '#111', border: '1px solid #222', padding: '1.5rem' }}>
-          <h2 style={{ color: '#22c55e', fontSize: '1.2rem', borderBottom: '1px solid #222', paddingBottom: '0.5rem', marginTop: 0 }}>
-            COMPLETED ARCHIVE ({completedTasks.length})
-          </h2>
+        {/* Right Column: Completed Archive & Calendar Feed */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <section style={{ background: '#111', border: '1px solid #222', padding: '1.5rem' }}>
+            <h2 style={{ color: '#22c55e', fontSize: '1.2rem', borderBottom: '1px solid #222', paddingBottom: '0.5rem', marginTop: 0 }}>
+              COMPLETED ARCHIVE ({completedTasks.length})
+            </h2>
 
-          {completedTasks.length === 0 ? (
-            <div style={{ color: '#666', textAlign: 'center', padding: '3rem' }}>No completed quests archived yet.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              {completedTasks.map((task) => (
-                <div key={task._id} style={{ background: '#131316', border: '1px solid #1e293b', padding: '1rem', opacity: 0.75 }}>
-                  <h4 style={{ margin: '0 0 0.3rem 0', color: '#94a3b8', textDecoration: 'line-through' }}>{task.title}</h4>
-                  <span style={{ fontSize: '0.75rem', color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '0.2rem 0.4rem' }}>
-                    STATUS: EXECUTED
-                  </span>
-                </div>
-              ))}
+            {completedTasks.length === 0 ? (
+              <div style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>No completed quests archived yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                {completedTasks.map((task) => (
+                  <div key={task._id} style={{ background: '#131316', border: '1px solid #1e293b', padding: '1rem', opacity: 0.75 }}>
+                    <h4 style={{ margin: '0 0 0.3rem 0', color: '#94a3b8', textDecoration: 'line-through' }}>{task.title}</h4>
+                    <span style={{ fontSize: '0.75rem', color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '0.2rem 0.4rem' }}>
+                      STATUS: EXECUTED
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Google Calendar Feed Section */}
+          <section style={{ background: '#111', border: '1px solid #222', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+              <h2 style={{ color: '#a855f7', fontSize: '1.2rem', margin: 0 }}>
+                GOOGLE CALENDAR FEED
+              </h2>
+              {isCalendarConnected && (
+                <button 
+                  onClick={fetchSyncedEvents}
+                  style={{ background: 'transparent', border: '1px solid #a855f7', color: '#a855f7', fontSize: '0.7rem', padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {syncLoading ? 'SYNCING...' : 'REFRESH'}
+                </button>
+              )}
             </div>
-          )}
-        </section>
+
+            {!isCalendarConnected ? (
+              <div style={{ color: '#666', textAlign: 'center', padding: '1.5rem', fontSize: '0.85rem' }}>
+                Calendar not synced. Click **SYNC CALENDAR** above to link your Google account.
+              </div>
+            ) : calendarEvents.length === 0 ? (
+              <div style={{ color: '#666', textAlign: 'center', padding: '1.5rem', fontSize: '0.85rem' }}>
+                No upcoming events found in primary calendar.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '250px', overflowY: 'auto' }}>
+                {calendarEvents.map((event, idx) => (
+                  <div key={idx} style={{ background: '#16161a', border: '1px solid #2a1b3d', padding: '0.8rem' }}>
+                    <h4 style={{ margin: '0 0 0.2rem 0', color: '#e2e8f0', fontSize: '0.9rem' }}>{event.summary}</h4>
+                    <span style={{ color: '#a855f7', fontSize: '0.7rem' }}>
+                      {new Date(event.start.dateTime || event.start.date).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
 
       </div>
 

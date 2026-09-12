@@ -3,7 +3,6 @@ const router = express.Router();
 const { google } = require('googleapis');
 const User = require('../models/User');
 
-// Helper function to create a fresh OAuth2 client per request
 const createOAuthClient = () => {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -12,9 +11,12 @@ const createOAuthClient = () => {
   );
 };
 
-// 1. Generate Auth URL
+// 1. Generate Auth URL (passing userId in state)
 router.get('/auth', (req, res) => {
   const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
   const oauth2Client = createOAuthClient();
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -25,15 +27,17 @@ router.get('/auth', (req, res) => {
   res.json({ url });
 });
 
-// 2. OAuth Callback
+// 2. OAuth Callback & Save Tokens to User Schema
 router.get('/callback', async (req, res) => {
   const { code, state: userId } = req.query;
   try {
     const oauth2Client = createOAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
     
-    if (userId) {
+    if (userId && userId !== 'undefined') {
       await User.findByIdAndUpdate(userId, { googleTokens: tokens });
+    } else {
+      console.warn("Warning: Received OAuth callback without valid userId state.");
     }
 
     res.redirect(`https://tasker-tech-zephyr.vercel.app/dashboard?calendar=connected`);
@@ -43,7 +47,7 @@ router.get('/callback', async (req, res) => {
   }
 });
 
-// 3. Fetch Events
+// 3. Fetch Events using User's Saved Tokens
 router.get('/sync/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
